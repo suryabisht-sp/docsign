@@ -1,0 +1,7 @@
+[build]
+  command = "npm run build"  # Adjust this based on your build command
+  publish = "dist"           # Adjust this based on your build output directory
+  functions = "lambda"       # Adjust this based on your serverless functions directory
+
+[build.environment]
+  NODE_VERSION = "12"    
