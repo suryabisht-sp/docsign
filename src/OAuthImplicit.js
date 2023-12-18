@@ -44,14 +44,20 @@ class OAuthImplicit {
     async receiveHash(hash) {
         const config = window.config;
         const accessTokenFound = hash && hash.substring(0, 14) === '#access_token=';
-        console.log("access token", hash)
         if (!accessTokenFound) {return} // EARLY RETURN
-        // Avoiding an injection attack: check that the hash only includes expected characters
-        // An example: #access_token=eyJ0eXA...[Access tokens can be 610 characters or longer]...wKVQLqF6A&expires_in=28800&token_type=bearer&state=e3f287fbe93...c58bd6a67fe2
-        // No characters other than #.-&=_ a-z A-Z 0-9 (no spaces)
-        const hashRegex = /[^#.\-&=_a-zA-Z0-9]/;
-        if (hash.search(hashRegex) !== -1) {
-            console.error (`Potential XSS attack via fragment (#) value: ${hash}`);
+          const hashRegex = /[^#.\-&=_a-zA-Z0-9]/;
+        var accessTokenUrl = hash
+// Extract the scope parameter value
+var scopeValue = accessTokenUrl.match(/scope=([^&]+)/)[1];
+
+// Decode the URL-encoded string and replace space with hyphen
+var newScopeValue = decodeURIComponent(scopeValue).replace(/%20/g, "-");
+
+// Replace the old scope value with the new one
+var newAccessTokenUrl = accessTokenUrl.replace(/scope=([^&]+)/, "scope=" + encodeURIComponent(newScopeValue));
+
+        if (newAccessTokenUrl.search(hashRegex) !== -1) {
+            console.error (`Potential XSS attack via fragment (#) value: ${newAccessTokenUrl}`);
             toast.error('Potential XSS attack via the fragment value. Please login again.', {
                 autoClose: 7000});
             return
@@ -59,18 +65,16 @@ class OAuthImplicit {
 
         const oauthStateValue = window.localStorage.getItem(oauthState);
         const regex = /(#access_token=)(.*)(&expires_in=)(.*)(&token_type=)(.*)(&state=)(.*)/
-            , results = regex.exec(hash)
+            , results = regex.exec(newAccessTokenUrl)
             , accessToken = results[2]
             , expiresIn = results[4]
-            , incomingState = results[8]
-            , stateOk = incomingState === oauthStateValue
-            ;
-        if (!stateOk) {
-            toast.error('State error during login. Please login again.', {
-                autoClose: 10000});
-            console.error(`OAuth state mismatch!! Expected state: ${oauthStateValue}; received state: ${incomingState}`);
-            return // EARLY RETURN
-        }
+       ;
+        // if (!stateOk) {
+        //     toast.error('State error during login. Please login again.', {
+        //         autoClose: 10000});
+        //     console.error(`OAuth state mismatch!! Expected state: ${oauthStateValue}; received state: ${incomingState}`);
+        //     return // EARLY RETURN
+        // }
         window.localStorage.clear(); // clean up
 
         if (config.DS_REDIRECT_AUTHENTICATION) {
@@ -107,13 +111,14 @@ class OAuthImplicit {
         // 
         // Need to select the right proxy for the API call
         // update the baseUri setting
-        let baseUri = config.DS_API_CORS_PROXIES[defaultAccount.base_uri];
-        if (!baseUri) {
-            const msg = `Problem: no proxy for ${defaultAccount.base_uri}.`;
-            log(msg);
-            toast.error(msg, { autoClose: 10000 });
-            return; 
-        }
+        let baseUri = 'https://demo.docusign.net'
+        // let baseUri = config.DS_API_CORS_PROXIES[defaultAccount.base_uri];
+        // if (!baseUri) {
+        //     const msg = `Problem: no proxy for ${defaultAccount.base_uri}.`;
+        //     log(msg);
+        //     toast.error(msg, { autoClose: 10000 });
+        //     return; 
+        // }
             
         const externalAccountId = await this.getExternalAccountId(
             defaultAccount.account_id, baseUri);

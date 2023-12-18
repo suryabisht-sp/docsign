@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 import React from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -36,6 +37,10 @@ class App extends React.Component {
             resultsEnvelopeJson: undefined,
             formName: '',
             formEmail: '',
+            selectedFile: null,
+            errorMessage: '',
+            pdfBlob: null,
+            namedBlobs: [],
         };
         this.oAuthImplicit = new OAuthImplicit(this);
         this.docusign = new DocuSign(this);
@@ -50,6 +55,55 @@ class App extends React.Component {
         this.getEnvelope = this.getEnvelope.bind(this);
         this.receiveMessage = this.receiveMessage.bind(this);
     }
+
+    handleFileChange = (event) => {
+        const selectedFile = event.target.files[0];
+        console.log("file", selectedFile.name)
+       if (selectedFile && selectedFile.type === 'application/pdf') {
+            this.setState({
+                selectedFile,
+                errorMessage: '',
+            });
+            this.convertToBlob(selectedFile);
+        } else {
+            this.setState({
+                selectedFile: null,
+                errorMessage: 'Please select a valid PDF file.',
+            });
+        }
+        // console.log("filename", this.selectedFile)
+    };
+    
+    clearState = () => {
+        this.setState({ pdfBlob: "" })
+        this.setState({ selectedFile: "" })
+        this.setState({ namedBlobs: ""})
+    }
+
+    convertToBlob = (file) => {
+        const reader = new FileReader();
+        console.log("file vonver", file)
+        reader.onloadend = () => {
+         
+
+        const pdfBlob = new Blob([reader.result], { type: 'application/pdf' });
+        const namedBlob = {
+        name: file.name, // You can replace this with the actual filename logic
+        blob: pdfBlob,        
+      };
+   this.setState({
+                pdfBlob,
+            });
+      // Update the state to include the new namedBlob
+      this.setState((prevState) => ({
+        namedBlobs: [...prevState.namedBlobs, namedBlob],
+      }));
+    };            
+
+            
+
+        reader.readAsArrayBuffer(file);
+    };
 
     /**
      * Starting up--if our URL includes a hash, check it to see if 
@@ -188,7 +242,6 @@ class App extends React.Component {
      * @param results
      */
     oAuthResults(results) {
-        console.log("resultsssssss", results)
         this.setState({
             accessToken: results.accessToken,
             expires: results.expires,
@@ -202,7 +255,6 @@ class App extends React.Component {
             formName: results.name, // default: set to logged in user
             formEmail: results.email,
         });
-
         toast.success(`Welcome ${results.name}, you are now logged in`);
     }
 
@@ -237,7 +289,7 @@ class App extends React.Component {
         }
 
         this.setState({ working: true, workingMessage: "Sending envelope" });
-        const results = await this.docusign.sendEnvelope();
+        const results = await this.docusign.sendEnvelope(this.state.pdfBlob);
         const { apiRequestsReset } = results;
         const responseApiRequestsReset = apiRequestsReset ?
             new Date(apiRequestsReset) : undefined;
@@ -376,6 +428,47 @@ class App extends React.Component {
                                     onChange={this.formEmailChange}
                                 />
                             </Form.Group>
+                            <Form.Group>
+                                <label htmlFor="pdfFile">Choose a PDF file:</label>
+                                <br/>
+                                <Form.Group className="custom-file">
+                                    <input
+                                        type="file"
+                                        className="custom-file-input"
+                                        id="pdfFile"
+                                        accept=".pdf"
+                                        onChange={this.handleFileChange}
+                                    />
+                                    <label className="custom-file-label" htmlFor="pdfFile">
+                                        {this.state.selectedFile ? this.state.selectedFile.name : 'Choose file'}
+                                    </label>
+                                </Form.Group>
+
+                                {this.state.errorMessage && (
+                                    <div className="text-danger">{this.state.errorMessage}</div>
+                                )}
+                            </Form.Group >
+  {console.log("resu;tss", this.state.pdfBlob,  "arrray", this.state.namedBlobs )}
+                            {this.state.namedBlobs?.length > 0 && this.state.namedBlobs.map((namedBlob, index) => (
+    <div className="mt-3" key={index}>
+      <div className="input-group-append">
+            <Button type="button" variant="red" className="close" aria-label="Close" onClick={() => this.clearState(index)}>
+                <span aria-hidden="true">&times;</span>
+            </Button>
+                                    </div>
+              <Form.Group style={{width:"50%"}}>                   
+        <img
+            className='card-body'
+            title="PDF Preview"
+            width="100%"
+            height="auto"
+            src='https://static.vecteezy.com/system/resources/previews/010/750/673/non_2x/pdf-icon-on-white-background-file-pdf-icon-sign-pdf-format-symbol-flat-style-free-vector.jpg'
+            // src={URL.createObjectURL(namedBlob.blob)}
+                                    />
+        <p className='text-alg'>{namedBlob.name}</p>
+                     </Form.Group>                  
+      </div>
+))}
 
                             <Button variant="primary" onClick={this.sendEnvelope}>
                                 Send Envelope

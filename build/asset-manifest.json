@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/static/css/main.fbe3a7a3.chunk.css",
+    "main.js": "/static/js/main.23204a5d.chunk.js",
+    "main.js.map": "/static/js/main.23204a5d.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.3446c65d.js",
+    "runtime-main.js.map": "/static/js/runtime-main.3446c65d.js.map",
+    "static/css/2.0a00179b.chunk.css": "/static/css/2.0a00179b.chunk.css",
+    "static/js/2.a76ddef1.chunk.js": "/static/js/2.a76ddef1.chunk.js",
+    "static/js/2.a76ddef1.chunk.js.map": "/static/js/2.a76ddef1.chunk.js.map",
+    "static/js/3.3c53cf72.chunk.js": "/static/js/3.3c53cf72.chunk.js",
+    "static/js/3.3c53cf72.chunk.js.map": "/static/js/3.3c53cf72.chunk.js.map",
+    "index.html": "/index.html",
+    "static/css/2.0a00179b.chunk.css.map": "/static/css/2.0a00179b.chunk.css.map",
+    "static/css/main.fbe3a7a3.chunk.css.map": "/static/css/main.fbe3a7a3.chunk.css.map",
+    "static/js/2.a76ddef1.chunk.js.LICENSE.txt": "/static/js/2.a76ddef1.chunk.js.LICENSE.txt",
+    "static/media/anchorfields.228f85c9.pdf": "/static/media/anchorfields.228f85c9.pdf"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.3446c65d.js",
+    "static/css/2.0a00179b.chunk.css",
+    "static/js/2.a76ddef1.chunk.js",
+    "static/css/main.fbe3a7a3.chunk.css",
+    "static/js/main.23204a5d.chunk.js"
+  ]
+}

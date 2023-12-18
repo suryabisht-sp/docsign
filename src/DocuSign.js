@@ -31,21 +31,11 @@ class DocuSign {
     /**
      * Send an envelope, return results or error
      */
-    async sendEnvelope() {
-        // get the document
-        let response = await fetch(anchorfields_pdf)
-        if (!response || response.status !== 200) {
-            const msg = `Could not fetch file ${anchorfields_pdf}`;
-            console.log(msg);
-            toast.error(msg, { autoClose: 10000 });
-            return;
-        }
-        // See https://stackoverflow.com/a/39951543/64904
-        const fileBlob = await response.blob();
+    async sendEnvelope(chk) {
         const reader = new FileReader();
         await new Promise(resolve => {
             reader.onloadend = resolve;
-            reader.readAsDataURL(fileBlob); 
+            reader.readAsDataURL(chk); 
         });
         const base64File = reader.result.split(',')[1];
         
