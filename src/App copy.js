@@ -12,7 +12,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import OAuthImplicit from './OAuthImplicit';
 import DocuSign from './DocuSign';
 import './App.css';
-import Modal from 'react-bootstrap/Modal';
 
 class App extends React.Component {
     constructor(props) {
@@ -40,11 +39,8 @@ class App extends React.Component {
             formEmail: '',
             selectedFile: null,
             errorMessage: '',
-            pdfBlobs: null,
+            pdfBlob: null,
             namedBlobs: [],
-            selectedPdfIndex: null,
-            selectedPdfPreviewIndex: null,
-            showModal: false,
         };
         this.oAuthImplicit = new OAuthImplicit(this);
         this.docusign = new DocuSign(this);
@@ -59,60 +55,47 @@ class App extends React.Component {
     }
 
     handleFileChange = (event) => {
-        const selectedFiles = event.target.files;
-        console.log("slecgted fiels", selectedFiles)
-        const validFiles = Array.from(selectedFiles).filter(file => file.type === 'application/pdf');
-
-        if (validFiles.length > 0) {
+        const selectedFile = event.target.files[0];
+        console.log("file", selectedFile.name)
+        if (selectedFile && selectedFile.type === 'application/pdf') {
             this.setState({
-                selectedFiles: validFiles,
+                selectedFile,
                 errorMessage: '',
             });
-
-            // Convert each selected file to a blob
-            validFiles.forEach(file => this.convertToBlob(file));
+            this.convertToBlob(selectedFile);
         } else {
             this.setState({
-                selectedFiles: [],
-                errorMessage: 'Please select one or more valid PDF files.',
-                selectedPdfIndex: null,
+                selectedFile: null,
+                errorMessage: 'Please select a valid PDF file.',
             });
         }
+        // console.log("filename", this.selectedFile)
     };
 
-    clearState = (index) => {
-        console.log("index for clear", index)
-        this.setState((prevState) => ({
-            pdfBlobs: prevState.pdfBlobs.filter((_, i) => i !== index),
-            selectedPdfIndex: null
-        }));
-    };
+    clearState = () => {
+        this.setState({ pdfBlob: "" })
+        this.setState({ selectedFile: "" })
+        this.setState({ namedBlobs: "" })
+    }
 
     convertToBlob = (file) => {
         const reader = new FileReader();
-
+        console.log("file vonver", file)
         reader.onloadend = () => {
             const pdfBlob = new Blob([reader.result], { type: 'application/pdf' });
             const namedBlob = {
                 name: file.name,
                 blob: pdfBlob,
             };
-
+            this.setState({
+                pdfBlob,
+            });
             // Update the state to include the new namedBlob
             this.setState((prevState) => ({
-                pdfBlobs: [...(prevState.pdfBlobs || []), namedBlob],  // Change here
+                namedBlobs: [...prevState.namedBlobs, namedBlob],
             }));
         };
-
         reader.readAsArrayBuffer(file);
-    };
-
-    showPreviewModal = (index) => {
-        this.setState({ showModal: true, selectedPdfPreviewIndex: index });
-    };
-
-    hidePreviewModal = () => {
-        this.setState({ showModal: false, selectedPdfPreviewIndex: null });
     };
 
     /**
@@ -447,9 +430,8 @@ class App extends React.Component {
                                         id="pdfFile"
                                         accept=".pdf"
                                         onChange={this.handleFileChange}
-                                        multiple
                                     />
-
+                                    
                                     <label className="custom-file-label" htmlFor="pdfFile">
                                         {this.state.selectedFile ? this.state.selectedFile.name : 'Choose file...'}
                                     </label>
@@ -458,67 +440,34 @@ class App extends React.Component {
                                     <div className="text-danger">{this.state.errorMessage}</div>
                                 )}
                             </Form.Group >
+                            {this.state.namedBlobs?.length > 0 && this.state.namedBlobs.map((namedBlob, index) => (
+                                <div className="mt-3" key={index}>
+                                    <div className="input-group-append">
+                                        <Button type="button" variant="red" className="close" aria-label="Close" onClick={() => this.clearState(index)}>
+                                            <span aria-hidden="true">&times;</span>
+                                        </Button>
+                                    </div>
+                                    <Form.Group style={{ width: "50%" }}>
+                                        <img
+                                            className='card-body'
+                                            title="PDF Preview"
+                                            width="100%"
+                                            height="auto"
+                                            src='https://static.vecteezy.com/system/resources/previews/010/750/673/non_2x/pdf-icon-on-white-background-file-pdf-icon-sign-pdf-format-symbol-flat-style-free-vector.jpg'
+                                        // src={URL.createObjectURL(namedBlob.blob)}
+                                        />
+                                        <p className='text-alg'>{namedBlob.name}</p>
+                                    </Form.Group>
+                                </div>
+                            ))}
                             <Button variant="primary" onClick={this.sendEnvelope}>
                                 Send Envelope
                             </Button>
                             <Button variant="primary" className='ml-4' onClick={this.getEnvelope}>
                                 Get Envelope Status
                             </Button>
-                            <br />
                         </Form>
-                        {console.log("index of file", this.state.selectedPdfIndex)}
-                        {this.state.pdfBlobs?.length > 0 && this.state.selectedPdfIndex !== null ? <Button onClick={() => this.showPreviewModal(this.state.selectedPdfIndex)} className='mt-4'>Preview</Button> : ""}
                     </Col>
-                    <div className='pdf-list'>
-                        {this.state.pdfBlobs?.length > 0 && this.state.pdfBlobs.map((namedBlob, index) => (
-                            <div style={{ width: this.state.pdfBlobs?.length < 5 ? "25%" : "100%" }} className={`mt-3 card-list ${index === this.state.selectedPdfIndex ? 'highlight-pdf' : ''}`} key={index} onClick={() => this.setState({ selectedPdfIndex: index })}>
-                                <div className="input-group-append btn-dir">
-                                    <Button
-                                        type="button"
-                                        variant="red"
-                                        className="close"
-                                        aria-label="Close"
-                                        onClick={() => this.clearState(index)}
-                                    >
-                                        <span aria-hidden="true" className='btn-dir1'>&times;</span>
-                                    </Button>
-                                </div>
-                                <Form.Group className='pdf-algn' style={{ width: this.state.pdfBlobs?.length < 3 ? "50%" : "100%" }}>
-                                    <img
-                                        className='card-body'
-                                        title="PDF Preview"
-                                        width="100%"
-                                        height="auto"
-                                        src='https://static.vecteezy.com/system/resources/previews/010/750/673/non_2x/pdf-icon-on-white-background-file-pdf-icon-sign-pdf-format-symbol-flat-style-free-vector.jpg'
-                                    // src={URL.createObjectURL(namedBlob.blob)}
-                                    />
-                                    <p className={`text-alg ${index === this.state.selectedPdfIndex ? 'highlight-text' : ''}`}>
-                                        {namedBlob.name}</p>
-                                </Form.Group>
-                            </div>
-                        ))}
-                    </div>
-                    <Modal show={this.state.showModal} onHide={this.hidePreviewModal} style={{ height: "100vh" }}>
-                        <Modal.Header closeButton>
-                            <Modal.Title>PDF Preview</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            {this.state.pdfBlobs && this.state.selectedPdfPreviewIndex !== null && (
-                                <iframe
-                                    className='modal-pdf-preview'
-                                    title="PDF Preview"
-                                    width="100%"
-                                    height="auto"
-                                    src={URL.createObjectURL(this.state.pdfBlobs[this.state.selectedPdfPreviewIndex].blob)}
-                                />
-                            )}
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={this.hidePreviewModal}>
-                                Close
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
                 </Row>
                 <Row className='mt-4'>
                     <Col>
