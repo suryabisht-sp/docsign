@@ -5,15 +5,19 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
+var _reactToastify = require("react-toastify");
+
+var _anchorfields = _interopRequireDefault(require("./assets/anchorfields.pdf"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-/**
- * DocuSign and related operations.
- */
+var docName = 'anchorfields.pdf';
 var sdkString = 'codeEg_react';
 var urlFrag = '/restapi/v2.1'; // DocuSign specific
 
@@ -80,27 +84,24 @@ function () {
                     switch (_context.prev = _context.next) {
                       case 0:
                         doc = documents[i];
-                        console.log("reader,", doc); // Assuming doc is a File object
-
                         reader = new FileReader();
-                        _context.next = 5;
+                        _context.next = 4;
                         return regeneratorRuntime.awrap(new Promise(function (resolve) {
                           reader.onloadend = resolve;
-                          reader.readAsDataURL(doc);
+                          reader.readAsDataURL(doc); // Assuming doc is a File object
                         }));
 
-                      case 5:
-                        base64File = reader.result.split(',')[1];
-                        console.log("base 64 reader", reader); // Add document details to the envelope request
+                      case 4:
+                        base64File = reader.result.split(',')[1]; // Add document details to the envelope request
 
                         envelopeRequest.documents.push({
-                          name: "DocuSign",
+                          name: doc.name,
                           fileExtension: 'pdf',
                           documentId: (i + 1).toString(),
                           documentBase64: base64File
                         });
 
-                      case 8:
+                      case 6:
                       case "end":
                         return _context.stop();
                     }

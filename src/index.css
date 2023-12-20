@@ -56,3 +56,7 @@ code {
 .common{
   margin-top: 15px;
 }
+
+.btn-flt{
+  float: inline-start;
+}

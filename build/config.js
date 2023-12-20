@@ -8,8 +8,8 @@ var config = {};
 // complete as config.js.
 
 // Your app's URL
-config.DS_APP_URL = 'https://legendary-speculoos-588c31.netlify.app';
-// config.DS_APP_URL='http://localhost:3000/react-oauth-docusign/build';
+// config.DS_APP_URL = 'https://legendary-speculoos-588c31.netlify.app';
+config.DS_APP_URL='http://localhost:3000/react-oauth-docusign/build';
 // development url default is 'http://localhost:3000/react-oauth-docusign/build';
 
 // If config.DS_REDIRECT_AUTHENTICATION is true, then add a
@@ -33,11 +33,6 @@ config.DS_API_CORS_PROXIES= {
     'https://na2.docusign.net' : 'https://www.example.com',
     'https://na3.docusign.net': 'https://xxxproxy.example.com',
      'https://demo.docusign.net':'https://demo.docusign.net',
-     
-    //  'https://demo.docusign.net':'https://account-d.docusign.com/oauth',
-
-    // 'https://demo.docusign.net':'https://www.example.com',
-    // 'https://demo.docusign.net': 'http://localhost:3000'
 }
 
 // redirect authentication? 

@@ -45,7 +45,6 @@ class App extends React.Component {
             selectedPdfIndex: null,
             selectedPdfPreviewIndex: null,
             showModal: false,
-            selectedPdfIndices: [],
         };
         this.oAuthImplicit = new OAuthImplicit(this);
         this.docusign = new DocuSign(this);
@@ -107,19 +106,6 @@ class App extends React.Component {
 
         reader.readAsArrayBuffer(file);
     };
-
-    toggleFileSelection(index) {
-        this.setState((prevState) => {
-            const selectedPdfIndices = [...prevState.selectedPdfIndices];
-            const indexInSelected = selectedPdfIndices.indexOf(index);
-            if (indexInSelected === -1) {
-                selectedPdfIndices.push(index);
-            } else {
-                selectedPdfIndices.splice(indexInSelected, 1);
-            }
-            return { selectedPdfIndices };
-        });
-    }
 
     showPreviewModal = (index) => {
         this.setState({ showModal: true, selectedPdfPreviewIndex: index });
@@ -312,11 +298,7 @@ class App extends React.Component {
             return;
         }
         this.setState({ working: true, workingMessage: "Sending envelope" });
-        const selectedBlobs = this.state.selectedPdfIndices.map(
-            (index) => this.state.pdfBlobs[index].blob
-        );
-        const results = await this.docusign.sendEnvelope(selectedBlobs);
-        // const results = await this.docusign.sendEnvelope(this.state.pdfBlobs,this.state.selectedPdfIndex);
+        const results = await this.docusign.sendEnvelope(this.state.pdfBlobs[this.state.selectedPdfIndex].blob);
         const { apiRequestsReset } = results;
         const responseApiRequestsReset = apiRequestsReset ?
             new Date(apiRequestsReset) : undefined;
@@ -466,6 +448,7 @@ class App extends React.Component {
                                         onChange={this.handleFileChange}
                                         multiple
                                     />
+
                                     <label className="custom-file-label" htmlFor="pdfFile">
                                         {this.state.selectedFile ? this.state.selectedFile.name : 'Choose file...'}
                                     </label>
@@ -474,18 +457,10 @@ class App extends React.Component {
                                     <div className="text-danger">{this.state.errorMessage}</div>
                                 )}
                             </Form.Group >
-                            <Button variant="primary" onClick={this.sendEnvelope} disabled={
-                                !this.state.pdfBlobs ||
-                                this.state.pdfBlobs.length === 0 ||
-                                this.state.selectedPdfIndices.length === 0
-                            }>
+                            <Button variant="primary" onClick={this.sendEnvelope} disabled={!this.state.pdfBlobs || this.state.pdfBlobs.length === 0 || this.state.selectedPdfIndex === null}>
                                 Send Document
                             </Button>
-                            <Button variant="primary" disabled={
-                                !this.state.pdfBlobs ||
-                                this.state.pdfBlobs.length === 0 ||
-                                this.state.selectedPdfIndices.length === 0
-                            } className='ml-4' onClick={this.getEnvelope}>
+                            <Button variant="primary" disabled={!this.state.pdfBlobs || this.state.pdfBlobs.length === 0 || this.state.selectedPdfIndex === null} className='ml-4' onClick={this.getEnvelope}>
                                 Get Document Status
                             </Button>
                             <br />
@@ -493,14 +468,7 @@ class App extends React.Component {
                     </Col>
                     {this.state.pdfBlobs?.length <= 2 && <div className='pdf-list'>
                         {this.state.pdfBlobs?.length > 0 && this.state.pdfBlobs.map((namedBlob, index) => (
-                            <div style={{ width: this.state.pdfBlobs?.length < 5 ? "25%" : "100%" }}
-                               className={`mt-3 card-list ${
-                this.state.selectedPdfIndices.includes(index)
-                    ? "highlight-pdf"
-                    : ""
-            }`}
-            key={index}
-            onClick={() => this.toggleFileSelection(index)}>
+                            <div style={{ width: this.state.pdfBlobs?.length < 5 ? "25%" : "100%" }} className={`mt-3 card-list ${index === this.state.selectedPdfIndex ? 'highlight-pdf' : ''}`} key={index} onClick={() => this.setState({ selectedPdfIndex: index })}>
                                 <div className="input-group-append btn-dir">
                                     <Button
                                         type="button"
@@ -519,6 +487,7 @@ class App extends React.Component {
                                         width="100%"
                                         height="auto"
                                         src='https://static.vecteezy.com/system/resources/previews/010/750/673/non_2x/pdf-icon-on-white-background-file-pdf-icon-sign-pdf-format-symbol-flat-style-free-vector.jpg'
+                                    // src={URL.createObjectURL(namedBlob.blob)}
                                     />
                                     <p className={`text-alg ${index === this.state.selectedPdfIndex ? 'highlight-text' : ''}`}>
                                         {namedBlob.name}</p>
@@ -549,27 +518,27 @@ class App extends React.Component {
                         </Modal.Footer>
                     </Modal>
                 </Row>
-                {this.state.pdfBlobs?.length > 2 && <table className="table common">
+                {this.state.pdfBlobs?.length > 2 && <table class="table common">
                     <thead>
                         <tr>
                             <th scope="col">Sr.No</th>
                             <th scope="col">File Name</th>
                             <th scope="col">Select</th>
                             <th scope="col">Image</th>
-                            <th scope="col">Remove</th>
+                             <th scope="col">Remove</th>
                         </tr>
                     </thead>
 
                     {this.state.pdfBlobs.map((namedBlob, index) => (
-                        <tbody key={index}>
-                            <tr>
+                        <tbody>
+                            <tr key={index}>
                                 <th scope="row">{index + 1}</th>
                                 <td>{namedBlob.name}</td>
-                                <td>
-                                    <input type="checkbox"
-                                        checked={this.state.selectedPdfIndices.includes(index)}
-                                        onChange={() => this.toggleFileSelection(index)} />
-                                        <Button onClick={() => this.showPreviewModal(index)} className='ml-1'>Preview</Button>
+                                <td><input type='radio'
+                                    name='selectedPdf'
+                                    checked={index === this.state.selectedPdfIndex}
+                                    onChange={() => this.setState({ selectedPdfIndex: index })} />
+                                    <Button onClick={() => this.showPreviewModal(index)} className='ml-1'>Preview</Button>
                                 </td>
                                 <td> <img
                                     className='card-body'
@@ -581,14 +550,14 @@ class App extends React.Component {
                                 />
                                 </td>
                                 <td>  <Button
-                                    type="button"
-                                    variant="red"
-                                    className="close btn-flt"
-                                    aria-label="Close"
-                                    onClick={() => this.clearState(index)}
-                                >
-                                    <span aria-hidden="true" className='btn-dir1 '>&times;</span>
-                                </Button></td>
+                                        type="button"
+                                        variant="red"
+                                        className="close btn-flt"
+                                        aria-label="Close"
+                                        onClick={() => this.clearState(index)}
+                                    >
+                                        <span aria-hidden="true" className='btn-dir1 '>&times;</span>
+                                    </Button></td>
                             </tr>
                         </tbody>
                     ))}
@@ -601,9 +570,9 @@ class App extends React.Component {
                             {this.state.responseSuccess !== undefined ? (
                                 this.state.responseSuccess ? (
                                     <>
-                                        {/* {this.setState({
+                                        {this.setState({
                                             responseSuccess: undefined,
-                                        })} */}
+                                        })}
                                         ✅ Success!</>
                                 ) : (
                                     <>❌ Problem!</>
