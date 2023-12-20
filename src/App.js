@@ -297,9 +297,8 @@ class App extends React.Component {
             toast.error("Problem: Enter the signer's name");
             return;
         }
-
         this.setState({ working: true, workingMessage: "Sending envelope" });
-        const results = await this.docusign.sendEnvelope(this.state.pdfBlob);
+        const results = await this.docusign.sendEnvelope(this.state.pdfBlobs[this.state.selectedPdfIndex].blob);
         const { apiRequestsReset } = results;
         const responseApiRequestsReset = apiRequestsReset ?
             new Date(apiRequestsReset) : undefined;
@@ -466,10 +465,9 @@ class App extends React.Component {
                             </Button>
                             <br />
                         </Form>
-                        {console.log("index of file", this.state.selectedPdfIndex)}
-                        {this.state.pdfBlobs?.length > 0 && this.state.selectedPdfIndex !== null ? <Button onClick={() => this.showPreviewModal(this.state.selectedPdfIndex)} className='mt-4'>Preview</Button> : ""}
+
                     </Col>
-                    <div className='pdf-list'>
+                    {this.state.pdfBlobs?.length <= 2 && <div className='pdf-list'>
                         {this.state.pdfBlobs?.length > 0 && this.state.pdfBlobs.map((namedBlob, index) => (
                             <div style={{ width: this.state.pdfBlobs?.length < 5 ? "25%" : "100%" }} className={`mt-3 card-list ${index === this.state.selectedPdfIndex ? 'highlight-pdf' : ''}`} key={index} onClick={() => this.setState({ selectedPdfIndex: index })}>
                                 <div className="input-group-append btn-dir">
@@ -495,9 +493,10 @@ class App extends React.Component {
                                     <p className={`text-alg ${index === this.state.selectedPdfIndex ? 'highlight-text' : ''}`}>
                                         {namedBlob.name}</p>
                                 </Form.Group>
+                                {this.state.pdfBlobs?.length > 0 && this.state.selectedPdfIndex !== null ? <Button onClick={() => this.showPreviewModal(this.state.selectedPdfIndex)}>Preview</Button> : ""}
                             </div>
                         ))}
-                    </div>
+                    </div>}
                     <Modal show={this.state.showModal} onHide={this.hidePreviewModal} style={{ height: "100vh" }}>
                         <Modal.Header closeButton>
                             <Modal.Title>PDF Preview</Modal.Title>
@@ -520,6 +519,40 @@ class App extends React.Component {
                         </Modal.Footer>
                     </Modal>
                 </Row>
+                {this.state.pdfBlobs?.length > 2 && <table class="table common">
+                    <thead>
+                        <tr>
+                            <th scope="col">Sr.No</th>
+                            <th scope="col">File Name</th>
+                            <th scope="col">Select</th>
+                            <th scope="col">Image</th>
+                        </tr>
+                    </thead>
+
+                    {this.state.pdfBlobs.map((namedBlob, index) => (
+                        <tbody>
+                            <tr key={index}>
+                                <th scope="row">{index + 1}</th>
+                                <td>{namedBlob.name}</td>
+                                <td><input type='radio'
+                                    name='selectedPdf'
+                                    checked={index === this.state.selectedPdfIndex}
+                                    onChange={() => this.setState({ selectedPdfIndex: index })} />
+                                    <Button onClick={() => this.showPreviewModal(index)} className='ml-1'>Preview</Button>
+                                </td>
+                                <td> <img
+                                    className='card-body'
+                                    title="PDF Preview"
+                                    width="30px"
+                                    style={{ padding: "0" }}
+                                    height="40px"
+                                    src='https://static.vecteezy.com/system/resources/previews/010/750/673/non_2x/pdf-icon-on-white-background-file-pdf-icon-sign-pdf-format-symbol-flat-style-free-vector.jpg'
+                                /></td>
+                            </tr>
+                        </tbody>
+                    ))}
+
+                </table>}
                 <Row className='mt-4'>
                     <Col>
                         <h2>Results</h2>
@@ -527,13 +560,16 @@ class App extends React.Component {
                             {this.state.responseSuccess !== undefined ? (
                                 this.state.responseSuccess ? (
                                     <>
+                                        {this.setState({
+                                            responseSuccess: undefined,
+                                        })}
                                         ✅ Success!</>
                                 ) : (
                                     <>❌ Problem!</>
                                 )
                             ) : null}
                         </h2>
-                        {this.state.responseEnvelopeId && toast.success(`Document sent successfully to ${this.state.formEmail}`, { autoClose: 4000 })}
+                        {this.state.responseSuccess !== undefined && toast.success(`Document sent successfully to ${this.state.formEmail}`, { autoClose: 4000 })}
                         {this.state.responseErrorMsg ? (
                             <p>Error message: {this.state.responseErrorMsg}</p>
                         ) : null}
